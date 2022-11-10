@@ -24,6 +24,9 @@ const ItemCtrl = (function(){
     }
 })();
 const UICtrl = (function(){
+    const UISelectors = {
+        itemList: "#item-list"
+    }
     return {
         populateItemList: function(items){
             let html= "";
@@ -37,7 +40,7 @@ const UICtrl = (function(){
                     </a>
                     </li>`;
                 });
-                document.querySelector("#item-list").innerHTML = html;
+                document.querySelector(UISelectors.itemList).innerHTML = html;
         }
     }
 })();
