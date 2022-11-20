@@ -20,9 +20,18 @@ const StorageCtrl = (function(){
                 items = JSON.parse(localStorage.getItem("items"))
             }
             return items
-        }()
-    }
-})();
+        }(),
+        changeItemFromLS: function(id, newItem){
+            if(localStorage.getItem("items") === null){
+
+            } else {
+                let items;
+                items = JSON.parse(localStorage.getItem("items"))
+                items[id]=newItem
+                localStorage.setItem("items", JSON.stringify(items))
+            }
+        }
+}})();
 const ItemCtrl = (function(){
     const Item = function(id,name,calories){
         this.id = id
@@ -36,7 +45,8 @@ const ItemCtrl = (function(){
             // {id:1, name:"Cookie", calories: 400},
             // {id:2, name:"eg", calories: 300}
         ],
-        total: 0
+        total: 0,
+        currentItem: null
     }
 
     return{
@@ -54,8 +64,6 @@ const ItemCtrl = (function(){
             calories = parseInt(calories)
             newItem = new Item(ID,name, calories);
             data.items.push(newItem);
-            console.log(data.items)
-            console.log(newItem)
             return newItem
         },
         getTotalCalories: function(){
@@ -70,6 +78,12 @@ const ItemCtrl = (function(){
         },
         logData: function(){
             return data
+        },
+        changeName: function(name){
+            this.name = name
+        },
+        changeCalorie: function(calories){
+            this.calories = calories
         }
     }
 })();
@@ -79,7 +93,8 @@ const UICtrl = (function(){
         itemNameInput: "#item-name",
         itemCaloriesInput: "#item-calories",
         addBtn: ".add-btn",
-        totalCalories: ".total-calories"
+        totalCalories: ".total-calories",
+        updateBtn: ".update-btn"
     }
     return {
         populateItemList: function(items){
@@ -118,18 +133,20 @@ const UICtrl = (function(){
         },
         showTotalCalories: function(totalCalories){
             document.querySelector(UISelectors.totalCalories).textContent = totalCalories
-        }
+        },
     }
 })();
 const App = (function(ItemCtrl,StorageCtrl,UICtrl){
     const loadEventListeners = function(){
         const UISelectors = UICtrl.getSelectors()
         document.querySelector(UISelectors.addBtn).addEventListener("click", itemAddSubmit);
+        document.querySelector("ul").addEventListener("click", itemMealUpdate);
+        document.querySelector(UISelectors.updateBtn).addEventListener("click", mealUpdate);
         document.addEventListener("DOMContentLoaded", getItemsFromLS)
     }
-    const itemAddSubmit = function(event){
+    const itemAddSubmit = function(event) {
         const input = UICtrl.getItemInput()
-        if(input.name !== '' && input.calories !== ''){
+        if (input.name !== '' && input.calories !== '') {
             const newItem = ItemCtrl.addItem(input.name, input.calories)
             console.log(newItem)
             UICtrl.addListItem(newItem)
@@ -139,6 +156,30 @@ const App = (function(ItemCtrl,StorageCtrl,UICtrl){
             UICtrl.clearInput()
         }
         event.preventDefault()
+    }
+    const itemMealUpdate = function(event){
+        const UISelectors = UICtrl.getSelectors()
+        if(event.target.className === "edit-item fa fa-pencil"){
+            document.querySelector(UISelectors.updateBtn).style.display= "inline"
+            document.querySelector(UISelectors.addBtn).style.display= "none"
+            // StorageCtrl.storeItem(newItem)
+            console.log(event.target.parentElement.parentElement)
+            event.target.parentElement.parentElement.id = "item-update"
+        }
+    }
+    const mealUpdate = function(){
+        const input = UICtrl.getItemInput()
+        const newItem = ItemCtrl.addItem(input.name, input.calories)
+        if (input.name !== '' && input.calories !== '') {
+            const list = document.querySelector("#item-list")
+            var nodes = Array.from(list.children)
+            newID = nodes.indexOf(document.querySelector("#item-update"))
+            const updateItem =`<strong>${newItem.name}: </strong> <em>${newItem.calories} Calories</em> <a href="#" class="secondary-content"><i class="edit-item fa fa-pencil"></i></a>`
+            document.querySelector("#item-update").innerHTML = updateItem
+            document.querySelector("#item-update").id = `item-${newID}`
+            newItem.id = newID
+            StorageCtrl.changeItemFromLS(newID, newItem)
+        }
     }
     const getItemsFromLS = function(){
         const items = StorageCtrl.getItemsFromLS
