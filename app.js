@@ -40,6 +40,9 @@ const StorageCtrl = (function(){
                 items.splice(id,1)
                 localStorage.setItem("items", JSON.stringify(items))
             }
+        },
+        clearLS: function(){
+            localStorage.clear()
         }
 }})();
 const ItemCtrl = (function(){
@@ -105,7 +108,9 @@ const UICtrl = (function(){
         addBtn: ".add-btn",
         totalCalories: ".total-calories",
         updateBtn: ".update-btn",
-        delBtn:".del-btn"
+        delBtn:".del-btn",
+        clrBtn:".clear-btn",
+        back:".back-btn"
     }
     return {
         populateItemList: function(items){
@@ -155,6 +160,8 @@ const App = (function(ItemCtrl,StorageCtrl,UICtrl){
         document.querySelector(UISelectors.updateBtn).addEventListener("click", mealUpdate);
         document.addEventListener("DOMContentLoaded", getItemsFromLS)
         document.querySelector(UISelectors.delBtn).addEventListener("click", delItem)
+        document.querySelector(UISelectors.clrBtn).addEventListener("click", clearItems)
+        document.querySelector(UISelectors.back).addEventListener("click", removeButtons)
     }
     const itemAddSubmit = function(event) {
         const input = UICtrl.getItemInput()
@@ -173,8 +180,9 @@ const App = (function(ItemCtrl,StorageCtrl,UICtrl){
         const UISelectors = UICtrl.getSelectors()
         if(event.target.className === "edit-item fa fa-pencil"){
             document.querySelector(UISelectors.updateBtn).style.display= "inline"
+            document.querySelector(UISelectors.delBtn).style.display= "inline"
+            document.querySelector(UISelectors.back).style.display= "inline"
             document.querySelector(UISelectors.addBtn).style.display= "none"
-            // StorageCtrl.storeItem(newItem)
             event.target.parentElement.parentElement.id = "item-update"
         }
     }
@@ -190,7 +198,10 @@ const App = (function(ItemCtrl,StorageCtrl,UICtrl){
             document.querySelector("#item-update").innerHTML = updateItem
             document.querySelector("#item-update").id = `item-${newID}`
             newItem.id = newID
+            const totalCalories = ItemCtrl.getTotalCalories()
+            UICtrl.showTotalCalories(totalCalories)
             StorageCtrl.changeItemFromLS(newID, newItem)
+            UICtrl.clearInput()
             document.querySelector(UISelectors.addBtn).style.display= "inline"
             document.querySelector(UISelectors.updateBtn).style.display= "none"
         }
@@ -202,8 +213,28 @@ const App = (function(ItemCtrl,StorageCtrl,UICtrl){
         delID = nodes.indexOf(document.querySelector("#item-update"))
         StorageCtrl.delItemFromLS(delID)
         list.removeChild(list.children[delID])
+        const totalCalories = ItemCtrl.getTotalCalories()
+        UICtrl.showTotalCalories(totalCalories)
+        UICtrl.clearInput()
         document.querySelector(UISelectors.addBtn).style.display= "inline"
         document.querySelector(UISelectors.updateBtn).style.display= "none"
+    }
+    const clearItems = function () {
+        document.querySelector("#item-list").innerHTML = ""
+        StorageCtrl.clearLS()
+        const totalCalories = ItemCtrl.getTotalCalories()
+        UICtrl.showTotalCalories(totalCalories)
+    }
+    const removeButtons = function (){
+        const UISelectors = UICtrl.getSelectors()
+        const list = document.querySelector("#item-list")
+        var nodes = Array.from(list.children)
+        newID = nodes.indexOf(document.querySelector("#item-update"))
+        document.querySelector("#item-update").id = `item-${newID}`
+        document.querySelector(UISelectors.updateBtn).style.display= "none"
+        document.querySelector(UISelectors.delBtn).style.display= "none"
+        document.querySelector(UISelectors.back).style.display= "none"
+        document.querySelector(UISelectors.addBtn).style.display= "inline"
     }
     const getItemsFromLS = function(){
         const items = StorageCtrl.getItemsFromLS
